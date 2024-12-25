@@ -60,6 +60,11 @@
             background-color: #e9f5ff;
         }
 
+        .grid td.highlighted {
+            background-color: #fff9c4;
+            transition: background-color 0.3s ease;
+        }
+
         .controls {
             display: grid;
             gap: 15px;
@@ -129,6 +134,10 @@
             background: #28a745;
         }
 
+        button.secondary {
+            background: #6c757d;
+        }
+
         .word-list {
             margin-top: var(--spacing);
             padding: 15px;
@@ -172,6 +181,9 @@
             .puzzle-title {
                 margin-top: 0;
             }
+            .highlighted {
+                background-color: transparent !important;
+            }
         }
 
         .puzzle-title {
@@ -203,6 +215,7 @@
             </div>
             <div class="button-group">
                 <button onclick="generatePuzzle()">צור תפזורת</button>
+                <button onclick="showSolution()" class="secondary" id="solutionButton">הצג פתרון</button>
                 <button onclick="printPuzzle(true)" class="print">הדפס עם מילים</button>
                 <button onclick="printPuzzle(false)" class="print">הדפס ללא מילים</button>
             </div>
@@ -215,8 +228,11 @@
     <script>
         let currentWords = [];
         let isWordListVisible = true;
+        let wordLocations = [];
+        let isSolutionVisible = false;
 
         function generatePuzzle() {
+            wordLocations = [];
             const words = document.getElementById('wordList').value
                 .split('\n')
                 .map(w => w.trim())
@@ -284,6 +300,7 @@
             displayWords();
             
             isWordListVisible = true;
+            isSolutionVisible = false;
         }
 
         function placeWord(grid, word) {
@@ -329,11 +346,17 @@
         }
 
         function placeWordAt(grid, word, startRow, startCol, direction) {
+            let locations = [];
             for (let i = 0; i < word.length; i++) {
                 const row = startRow + direction[0] * i;
                 const col = startCol + direction[1] * i;
                 grid[row][col] = word[i];
+                locations.push([row, col]);
             }
+            wordLocations.push({
+                word: word,
+                locations: locations
+            });
         }
 
         function displayPuzzle(grid) {
@@ -364,10 +387,24 @@
             `;
         }
 
-        function toggleWordList() {
-            const wordList = document.getElementById('wordListDisplay');
-            isWordListVisible = !isWordListVisible;
-            wordList.classList.toggle('hidden');
+        function showSolution() {
+            const cells = document.querySelectorAll('.grid td');
+            const solutionButton = document.getElementById('solutionButton');
+            
+            isSolutionVisible = !isSolutionVisible;
+            
+            if (isSolutionVisible) {
+                wordLocations.forEach(wordInfo => {
+                    wordInfo.locations.forEach(([row, col]) => {
+                        const index = row * parseInt(document.getElementById('size').value) + col;
+                        cells[index].classList.add('highlighted');
+                    });
+                });
+                solutionButton.textContent = 'הסתר פתרון';
+            } else {
+                cells.forEach(cell => cell.classList.remove('highlighted'));
+                solutionButton.textContent = 'הצג פתרון';
+            }
         }
 
         function printPuzzle(withWords) {
