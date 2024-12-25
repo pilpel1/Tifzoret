@@ -82,7 +82,7 @@
             color: #333;
         }
 
-        textarea, input[type="number"] {
+        textarea, input[type="number"], input[type="text"] {
             padding: 10px;
             border: 2px solid #ddd;
             border-radius: var(--border-radius);
@@ -105,6 +105,7 @@
             display: flex;
             gap: 10px;
             margin-top: 15px;
+            justify-content: center;
         }
 
         button {
@@ -122,10 +123,6 @@
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-
-        button.secondary {
-            background: #6c757d;
         }
 
         button.print {
@@ -159,7 +156,7 @@
         }
 
         @media print {
-            .controls, button {
+            .controls, button, h1 {
                 display: none;
             }
             .hidden {
@@ -170,7 +167,18 @@
             }
             .container {
                 box-shadow: none;
+                padding: 0;
             }
+            .puzzle-title {
+                margin-top: 0;
+            }
+        }
+
+        .puzzle-title {
+            text-align: center;
+            color: #333;
+            margin: 20px 0;
+            font-size: 1.8em;
         }
     </style>
 </head>
@@ -183,6 +191,10 @@
                 <label for="wordList">הכנס מילים (מילה אחת בכל שורה):</label>
                 <textarea id="wordList" dir="rtl" placeholder="הקלד כאן את המילים..."></textarea>
             </div>
+            <div class="input-group">
+                <label for="puzzleTitle">כותרת התפזורת:</label>
+                <input type="text" id="puzzleTitle" placeholder="הקלד כאן את הכותרת..." value="תפזורת">
+            </div>
             <div class="dimensions">
                 <div class="input-group">
                     <label for="size">גודל התפזורת:</label>
@@ -191,8 +203,8 @@
             </div>
             <div class="button-group">
                 <button onclick="generatePuzzle()">צור תפזורת</button>
-                <button onclick="toggleWordList()" id="toggleButton" class="secondary">הסתר מילים</button>
-                <button onclick="window.print()" class="print">הדפס</button>
+                <button onclick="printPuzzle(true)" class="print">הדפס עם מילים</button>
+                <button onclick="printPuzzle(false)" class="print">הדפס ללא מילים</button>
             </div>
         </div>
 
@@ -272,7 +284,6 @@
             displayWords();
             
             isWordListVisible = true;
-            updateToggleButton();
         }
 
         function placeWord(grid, word) {
@@ -327,7 +338,8 @@
 
         function displayPuzzle(grid) {
             const container = document.getElementById('puzzleContainer');
-            let html = '<table class="grid">';
+            const title = document.getElementById('puzzleTitle').value || 'תפזורת';
+            let html = `<h2 class="puzzle-title">${title}</h2><table class="grid">`;
             
             for (let row of grid) {
                 html += '<tr>';
@@ -352,16 +364,28 @@
             `;
         }
 
-        function updateToggleButton() {
-            const button = document.getElementById('toggleButton');
-            button.textContent = isWordListVisible ? 'הסתר מילים' : 'הצג מילים';
-        }
-
         function toggleWordList() {
             const wordList = document.getElementById('wordListDisplay');
             isWordListVisible = !isWordListVisible;
             wordList.classList.toggle('hidden');
-            updateToggleButton();
+        }
+
+        function printPuzzle(withWords) {
+            const wordList = document.getElementById('wordListDisplay');
+            const title = document.getElementById('puzzleTitle').value || 'תפזורת';
+            const container = document.getElementById('puzzleContainer');
+            
+            const titleElement = container.querySelector('.puzzle-title');
+            if (titleElement) {
+                titleElement.textContent = title;
+            }
+            
+            if (withWords) {
+                wordList.classList.remove('hidden');
+            } else {
+                wordList.classList.add('hidden');
+            }
+            window.print();
         }
     </script>
 </body>
