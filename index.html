@@ -3,40 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <title>מחולל תפזורות</title>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600&family=Varela+Round&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f5f5;
+            --border-radius: 8px;
+            --spacing: 20px;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: var(--spacing);
+            background-color: #f9f9f9;
+            line-height: 1.6;
         }
-        .grid {
-            font-family: monospace;
-            font-size: 20px;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        .grid td {
-            width: 30px;
-            height: 30px;
+
+        h1 {
+            color: var(--primary-color);
             text-align: center;
-            border: 1px solid #ccc;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
+
+        .container {
+            background: white;
+            padding: var(--spacing);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .grid {
+            font-family: 'Varela Round', 'Assistant', 'Segoe UI', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            border-collapse: separate;
+            border-spacing: 2px;
+            margin: 20px auto;
+            background: white;
+        }
+
+        .grid td {
+            width: 35px;
+            height: 35px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+            cursor: default;
+        }
+
+        .grid td:hover {
+            background-color: #e9f5ff;
+        }
+
         .controls {
-            margin-bottom: 20px;
+            display: grid;
+            gap: 15px;
+            margin-bottom: var(--spacing);
         }
-        .controls > * {
-            margin: 5px 0;
+
+        .input-group {
+            display: grid;
+            gap: 10px;
         }
+
+        .dimensions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        textarea, input[type="number"] {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
         #wordList {
             width: 100%;
             height: 150px;
+            resize: vertical;
         }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            background: var(--primary-color);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        button.print {
+            background: #28a745;
+        }
+
         .word-list {
-            margin-top: 20px;
-            padding: 10px;
-            background: #f5f5f5;
+            margin-top: var(--spacing);
+            padding: 15px;
+            background: var(--secondary-color);
+            border-radius: var(--border-radius);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
+
+        .word-list h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .words-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .word-item {
+            background: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
         @media print {
             .controls, button {
                 display: none;
@@ -44,72 +165,114 @@
             .hidden {
                 display: none;
             }
+            body {
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>מחולל תפזורות</h1>
-    
-    <div class="controls">
-        <div>
-            <label for="wordList">הכנס מילים (מילה אחת בכל שורה):</label><br>
-            <textarea id="wordList" dir="rtl"></textarea>
+    <div class="container">
+        <h1>מחולל תפזורות</h1>
+        
+        <div class="controls">
+            <div class="input-group">
+                <label for="wordList">הכנס מילים (מילה אחת בכל שורה):</label>
+                <textarea id="wordList" dir="rtl" placeholder="הקלד כאן את המילים..."></textarea>
+            </div>
+            <div class="dimensions">
+                <div class="input-group">
+                    <label for="size">גודל התפזורת:</label>
+                    <input type="number" id="size" value="15" min="5" max="30">
+                </div>
+            </div>
+            <div class="button-group">
+                <button onclick="generatePuzzle()">צור תפזורת</button>
+                <button onclick="toggleWordList()" id="toggleButton" class="secondary">הסתר מילים</button>
+                <button onclick="window.print()" class="print">הדפס</button>
+            </div>
         </div>
-        <div>
-            <label for="rows">מספר שורות:</label>
-            <input type="number" id="rows" value="15" min="5" max="30">
-            
-            <label for="cols">מספר עמודות:</label>
-            <input type="number" id="cols" value="15" min="5" max="30">
-        </div>
-        <button onclick="generatePuzzle()">צור תפזורת</button>
-        <button onclick="toggleWordList()">הצג/הסתר רשימת מילים</button>
-        <button onclick="window.print()">הדפס</button>
-    </div>
 
-    <div id="puzzleContainer"></div>
-    <div id="wordListDisplay" class="word-list"></div>
+        <div id="puzzleContainer"></div>
+        <div id="wordListDisplay" class="word-list"></div>
+    </div>
 
     <script>
         let currentWords = [];
+        let isWordListVisible = true;
 
         function generatePuzzle() {
             const words = document.getElementById('wordList').value
                 .split('\n')
                 .map(w => w.trim())
-                .filter(w => w.length > 0);
+                .filter(w => w.length > 0)
+                .sort((a, b) => b.length - a.length);
             
             if (words.length === 0) {
                 alert('נא להזין לפחות מילה אחת');
                 return;
             }
 
-            const rows = parseInt(document.getElementById('rows').value);
-            const cols = parseInt(document.getElementById('cols').value);
+            const size = parseInt(document.getElementById('size').value);
             
-            // יצירת מערך דו-מימדי ריק
-            let grid = Array(rows).fill().map(() => Array(cols).fill(''));
-            currentWords = [];
+            const tooLongWords = words.filter(word => word.length > size);
+            if (tooLongWords.length > 0) {
+                alert(`המילים הבאות ארוכות מדי עבור גודל התפזורת הנוכחי:\n${tooLongWords.join(', ')}\n\nנסה להגדיל את גודל התפזורת או לקצר את המילים.`);
+                return;
+            }
 
-            // ניסיון להכניס כל מילה
-            for (let word of words) {
-                if (placeWord(grid, word)) {
-                    currentWords.push(word);
+            let bestGrid = null;
+            let bestWords = [];
+            let bestFailedWords = [];
+            const MAX_ATTEMPTS = 50;
+
+            for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+                let grid = Array(size).fill().map(() => Array(size).fill(''));
+                let currentAttemptWords = [];
+                let currentAttemptFailed = [];
+
+                for (let word of words) {
+                    if (placeWord(grid, word)) {
+                        currentAttemptWords.push(word);
+                    } else {
+                        currentAttemptFailed.push(word);
+                    }
+                }
+
+                if (currentAttemptFailed.length === 0) {
+                    bestGrid = grid;
+                    bestWords = currentAttemptWords;
+                    break;
+                }
+
+                if (!bestGrid || currentAttemptFailed.length < bestFailedWords.length) {
+                    bestGrid = grid;
+                    bestWords = currentAttemptWords;
+                    bestFailedWords = currentAttemptFailed;
                 }
             }
 
-            // מילוי שאר המשבצות הריקות
-            for (let i = 0; i < rows; i++) {
-                for (let j = 0; j < cols; j++) {
-                    if (grid[i][j] === '') {
-                        grid[i][j] = String.fromCharCode(0x05D0 + Math.floor(Math.random() * 27));
+            if (bestFailedWords.length > 0) {
+                alert(`לא הצלחתי להכניס את המילים הבאות לתפזורת לאחר ${MAX_ATTEMPTS} ניסיונות:\n${bestFailedWords.join(', ')}\n\nנסה להציע גודל אחר לתפזורת.`);
+            }
+
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    if (bestGrid[i][j] === '') {
+                        bestGrid[i][j] = String.fromCharCode(0x05D0 + Math.floor(Math.random() * 27));
                     }
                 }
             }
 
-            // הצגת התפזורת
-            displayPuzzle(grid);
+            currentWords = bestWords;
+            displayPuzzle(bestGrid);
             displayWords();
+            
+            isWordListVisible = true;
+            updateToggleButton();
         }
 
         function placeWord(grid, word) {
@@ -122,7 +285,6 @@
                 [-1, 1],  // אלכסון ימינה-למעלה
             ];
 
-            // 20 ניסיונות להכניס את המילה
             for (let attempt = 0; attempt < 20; attempt++) {
                 const direction = directions[Math.floor(Math.random() * directions.length)];
                 const startRow = Math.floor(Math.random() * rows);
@@ -181,13 +343,25 @@
 
         function displayWords() {
             const container = document.getElementById('wordListDisplay');
-            container.innerHTML = '<h3>המילים המוחבאות:</h3>' + 
-                currentWords.join(', ');
+            let wordsHtml = currentWords.map(word => `<span class="word-item">${word}</span>`).join('');
+            container.innerHTML = `
+                <h3>המילים המוחבאות:</h3>
+                <div class="words-container">
+                    ${wordsHtml}
+                </div>
+            `;
+        }
+
+        function updateToggleButton() {
+            const button = document.getElementById('toggleButton');
+            button.textContent = isWordListVisible ? 'הסתר מילים' : 'הצג מילים';
         }
 
         function toggleWordList() {
             const wordList = document.getElementById('wordListDisplay');
+            isWordListVisible = !isWordListVisible;
             wordList.classList.toggle('hidden');
+            updateToggleButton();
         }
     </script>
 </body>
