@@ -192,6 +192,39 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pagination button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .pagination span {
+            font-weight: 500;
+            color: #333;
+        }
+
         @media print {
             .controls, button, h1 {
                 display: none;
@@ -211,6 +244,8 @@
             }
             .puzzle-title {
                 margin-top: 0;
+                margin-bottom: 10px;
+                font-size: 16px;
             }
             .highlighted {
                 background-color: transparent !important;
@@ -220,55 +255,70 @@
                 gap: 20px;
                 padding: 20px;
                 page-break-inside: avoid;
-                page-break-after: avoid;
+                page-break-after: always;
+                width: fit-content;
+                margin: 0 auto;
             }
             .print-grid[data-puzzles="1"] {
                 grid-template-columns: 1fr;
             }
             .print-grid[data-puzzles="2"] {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: repeat(2, fit-content(45%));
             }
             .print-grid[data-puzzles="4"] {
-                grid-template-columns: 1fr 1fr;
-                grid-template-rows: 1fr 1fr;
+                grid-template-columns: repeat(2, fit-content(45%));
+                grid-template-rows: repeat(2, auto);
             }
             .print-grid[data-puzzles="6"] {
-                grid-template-columns: 1fr 1fr 1fr;
-                grid-template-rows: 1fr 1fr;
+                grid-template-columns: repeat(3, fit-content(30%));
+                grid-template-rows: repeat(2, auto);
             }
             .print-grid[data-puzzles="9"] {
-                grid-template-columns: 1fr 1fr 1fr;
-                grid-template-rows: 1fr 1fr 1fr;
+                grid-template-columns: repeat(3, fit-content(30%));
+                grid-template-rows: repeat(3, auto);
             }
             .print-grid[data-puzzles="16"] {
-                grid-template-columns: 1fr 1fr 1fr 1fr;
-                grid-template-rows: 1fr 1fr 1fr 1fr;
+                grid-template-columns: repeat(4, fit-content(22%));
+                grid-template-rows: repeat(4, auto);
             }
             .puzzle-instance {
                 break-inside: avoid;
                 page-break-inside: avoid;
+                width: fit-content;
+                margin: 0 auto;
             }
             .puzzle-instance .grid {
-                font-size: calc(24px / var(--scale-factor));
+                font-size: 16px;
+                margin: 0 auto;
+                width: fit-content;
+                border-spacing: 1px;
+                border-collapse: separate;
             }
             .puzzle-instance .grid td {
-                width: calc(35px / var(--scale-factor));
-                height: calc(35px / var(--scale-factor));
-            }
-            .puzzle-instance .puzzle-title {
-                font-size: calc(1.8em / var(--scale-factor));
+                width: 28px;
+                height: 28px;
+                padding: 2px;
+                border: 1px solid #ddd;
+                text-align: center;
             }
             .puzzle-instance .word-list {
-                margin-top: 10px;
-                font-size: calc(16px / var(--scale-factor));
+                margin-top: 5px;
+                font-size: 12px;
+                width: 100%;
+                max-width: 100%;
+                padding: 5px;
             }
             .puzzle-instance .word-list h3 {
-                font-size: calc(1.2em / var(--scale-factor));
-                margin: 5px 0;
+                font-size: 14px;
+                margin: 2px 0;
             }
             .puzzle-instance .word-item {
-                font-size: calc(14px / var(--scale-factor));
-                padding: calc(5px / var(--scale-factor)) calc(15px / var(--scale-factor));
+                font-size: 12px;
+                padding: 2px 8px;
+            }
+            @page {
+                margin: 1cm;
+                size: A4;
             }
         }
 
@@ -296,18 +346,22 @@
             <div class="dimensions">
                 <div class="input-group">
                     <label for="size">גודל התפזורת:</label>
-                    <input type="number" id="size" value="15" min="5" max="30">
+                    <input type="number" id="size" value="7" min="5" max="30">
                 </div>
                 <div class="input-group">
                     <label for="puzzlesPerPage">כמות תפזורות בעמוד:</label>
                     <select id="puzzlesPerPage">
-                        <option value="1">1</option>
+                        <option value="1" selected>1</option>
                         <option value="2">2</option>
                         <option value="4">4</option>
                         <option value="6">6</option>
                         <option value="9">9</option>
                         <option value="16">16</option>
                     </select>
+                </div>
+                <div class="input-group">
+                    <label for="versionsCount">מספר גרסאות:</label>
+                    <input type="number" id="versionsCount" value="1" min="1" max="100">
                 </div>
             </div>
             <div class="button-group">
@@ -327,9 +381,12 @@
         let isWordListVisible = true;
         let wordLocations = [];
         let isSolutionVisible = false;
+        let allPuzzleVersions = [];
+        let currentPageIndex = 0;
 
         function generatePuzzle() {
             wordLocations = [];
+            allPuzzleVersions = [];
             const words = document.getElementById('wordList').value
                 .split('\n')
                 .map(w => w.trim())
@@ -342,6 +399,7 @@
             }
 
             const size = parseInt(document.getElementById('size').value);
+            const versionsCount = parseInt(document.getElementById('versionsCount').value);
             
             const tooLongWords = words.filter(word => word.length > size);
             if (tooLongWords.length > 0) {
@@ -349,58 +407,217 @@
                 return;
             }
 
-            let bestGrid = null;
-            let bestWords = [];
-            let bestFailedWords = [];
-            const MAX_ATTEMPTS = 50;
+            // יצירת כל הגרסאות
+            for (let version = 0; version < versionsCount; version++) {
+                let bestGrid = null;
+                let bestWords = [];
+                let bestFailedWords = [];
+                const MAX_ATTEMPTS = 50;
 
-            for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-                let grid = Array(size).fill().map(() => Array(size).fill(''));
-                let currentAttemptWords = [];
-                let currentAttemptFailed = [];
+                for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+                    let grid = Array(size).fill().map(() => Array(size).fill(''));
+                    let currentAttemptWords = [];
+                    let currentAttemptFailed = [];
+                    let currentLocations = [];
 
-                for (let word of words) {
-                    if (placeWord(grid, word)) {
-                        currentAttemptWords.push(word);
-                    } else {
-                        currentAttemptFailed.push(word);
+                    for (let word of words) {
+                        if (placeWord(grid, word, currentLocations)) {
+                            currentAttemptWords.push(word);
+                        } else {
+                            currentAttemptFailed.push(word);
+                        }
+                    }
+
+                    if (currentAttemptFailed.length === 0) {
+                        bestGrid = grid;
+                        bestWords = currentAttemptWords;
+                        break;
+                    }
+
+                    if (!bestGrid || currentAttemptFailed.length < bestFailedWords.length) {
+                        bestGrid = grid;
+                        bestWords = currentAttemptWords;
+                        bestFailedWords = currentAttemptFailed;
                     }
                 }
 
-                if (currentAttemptFailed.length === 0) {
-                    bestGrid = grid;
-                    bestWords = currentAttemptWords;
-                    break;
-                }
-
-                if (!bestGrid || currentAttemptFailed.length < bestFailedWords.length) {
-                    bestGrid = grid;
-                    bestWords = currentAttemptWords;
-                    bestFailedWords = currentAttemptFailed;
-                }
-            }
-
-            if (bestFailedWords.length > 0) {
-                alert(`לא הצלחתי להכניס את המילים הבאות לתפזורת לאחר ${MAX_ATTEMPTS} ניסיונות:\n${bestFailedWords.join(', ')}\n\nנסה להציע גודל אחר לתפזורת.`);
-            }
-
-            for (let i = 0; i < size; i++) {
-                for (let j = 0; j < size; j++) {
-                    if (bestGrid[i][j] === '') {
-                        bestGrid[i][j] = String.fromCharCode(0x05D0 + Math.floor(Math.random() * 27));
+                // מילוי אותיות רנדומליות
+                for (let i = 0; i < size; i++) {
+                    for (let j = 0; j < size; j++) {
+                        if (bestGrid[i][j] === '') {
+                            bestGrid[i][j] = String.fromCharCode(0x05D0 + Math.floor(Math.random() * 27));
+                        }
                     }
                 }
+
+                allPuzzleVersions.push({
+                    grid: bestGrid,
+                    words: bestWords,
+                    locations: [...wordLocations]
+                });
+                
+                // איפוס מיקומי המילים לגרסה הבאה
+                wordLocations = [];
             }
 
-            currentWords = bestWords;
-            displayPuzzle(bestGrid);
+            currentWords = allPuzzleVersions[0].words;
+            displayPuzzlesPage(0);
             displayWords();
             
             isWordListVisible = true;
             isSolutionVisible = false;
         }
 
-        function placeWord(grid, word) {
+        function displayPuzzlesPage(pageIndex) {
+            const puzzlesPerPage = parseInt(document.getElementById('puzzlesPerPage').value);
+            const container = document.getElementById('puzzleContainer');
+            const title = document.getElementById('puzzleTitle').value || 'תפזורת';
+            
+            let html = `
+                <div class="pagination">
+                    <button onclick="displayPuzzlesPage(${pageIndex - 1})" ${pageIndex === 0 ? 'disabled' : ''}>הקודם</button>
+                    <span>עמוד ${pageIndex + 1} מתוך ${Math.ceil(allPuzzleVersions.length / puzzlesPerPage)}</span>
+                    <button onclick="displayPuzzlesPage(${pageIndex + 1})" ${(pageIndex + 1) * puzzlesPerPage >= allPuzzleVersions.length ? 'disabled' : ''}>הבא</button>
+                </div>
+                <div class="print-grid" data-puzzles="${puzzlesPerPage}">
+            `;
+
+            const startIdx = pageIndex * puzzlesPerPage;
+            const endIdx = Math.min(startIdx + puzzlesPerPage, allPuzzleVersions.length);
+
+            for (let i = startIdx; i < endIdx; i++) {
+                const puzzleVersion = allPuzzleVersions[i];
+                html += `
+                    <div class="puzzle-instance">
+                        <h2 class="puzzle-title">${title} - גרסה ${i + 1}</h2>
+                        <table class="grid">
+                `;
+                
+                for (let row of puzzleVersion.grid) {
+                    html += '<tr>';
+                    for (let cell of row) {
+                        html += `<td>${cell}</td>`;
+                    }
+                    html += '</tr>';
+                }
+                
+                html += '</table></div>';
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+            currentPageIndex = pageIndex;
+        }
+
+        function printPuzzle(withWords) {
+            const puzzlesPerPage = parseInt(document.getElementById('puzzlesPerPage').value);
+            const wordList = document.getElementById('wordListDisplay');
+            const title = document.getElementById('puzzleTitle').value || 'תפזורת';
+            
+            // פתיחת חלון הדפסה
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html dir="rtl">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>הדפסת תפזורת</title>
+                    <style>${document.querySelector('style').textContent}</style>
+                </head>
+                <body>
+            `);
+
+            // הדפסת כל העמודים
+            for (let pageIndex = 0; pageIndex < Math.ceil(allPuzzleVersions.length / puzzlesPerPage); pageIndex++) {
+                const startIdx = pageIndex * puzzlesPerPage;
+                const endIdx = Math.min(startIdx + puzzlesPerPage, allPuzzleVersions.length);
+                
+                let html = `<div class="print-grid" data-puzzles="${puzzlesPerPage}">`;
+                
+                for (let i = startIdx; i < endIdx; i++) {
+                    const puzzleVersion = allPuzzleVersions[i];
+                    html += `
+                        <div class="puzzle-instance">
+                            <h2 class="puzzle-title">${title} - גרסה ${i + 1}</h2>
+                            <table class="grid">
+                    `;
+                    
+                    for (let row of puzzleVersion.grid) {
+                        html += '<tr>';
+                        for (let cell of row) {
+                            html += `<td>${cell}</td>`;
+                        }
+                        html += '</tr>';
+                    }
+                    
+                    html += '</table>';
+                    
+                    if (withWords) {
+                        const wordListClone = wordList.cloneNode(true);
+                        wordListClone.classList.remove('hidden');
+                        html += wordListClone.outerHTML;
+                    }
+                    
+                    html += '</div>';
+                }
+                
+                html += '</div>';
+                printWindow.document.write(html);
+            }
+            
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function showSolution() {
+            const cells = document.querySelectorAll('.grid td');
+            const solutionButton = document.getElementById('solutionButton');
+            
+            isSolutionVisible = !isSolutionVisible;
+            
+            if (isSolutionVisible) {
+                const startIdx = currentPageIndex * parseInt(document.getElementById('puzzlesPerPage').value);
+                const puzzlesPerPage = parseInt(document.getElementById('puzzlesPerPage').value);
+                
+                for (let i = 0; i < puzzlesPerPage; i++) {
+                    const puzzleVersion = allPuzzleVersions[startIdx + i];
+                    if (!puzzleVersion) break;
+                    
+                    puzzleVersion.locations.forEach(wordInfo => {
+                        wordInfo.locations.forEach(([row, col]) => {
+                            const gridIndex = i;
+                            const size = parseInt(document.getElementById('size').value);
+                            const cellIndex = row * size + col;
+                            const grids = document.querySelectorAll('.grid');
+                            if (grids[gridIndex]) {
+                                const cells = grids[gridIndex].querySelectorAll('td');
+                                if (cells[cellIndex]) {
+                                    cells[cellIndex].classList.add('highlighted');
+                                }
+                            }
+                        });
+                    });
+                }
+                solutionButton.textContent = 'הסתר פתרון';
+            } else {
+                cells.forEach(cell => cell.classList.remove('highlighted'));
+                solutionButton.textContent = 'הצג פתרון';
+            }
+        }
+
+        function displayWords() {
+            const container = document.getElementById('wordListDisplay');
+            let wordsHtml = currentWords.map(word => `<span class="word-item">${word}</span>`).join('');
+            container.innerHTML = `
+                <h3>המילים המוחבאות:</h3>
+                <div class="words-container">
+                    ${wordsHtml}
+                </div>
+            `;
+        }
+
+        function placeWord(grid, word, currentLocations) {
             const rows = grid.length;
             const cols = grid[0].length;
             const directions = [
@@ -416,7 +633,7 @@
                 const startCol = Math.floor(Math.random() * cols);
 
                 if (canPlaceWord(grid, word, startRow, startCol, direction)) {
-                    placeWordAt(grid, word, startRow, startCol, direction);
+                    placeWordAt(grid, word, startRow, startCol, direction, currentLocations);
                     return true;
                 }
             }
@@ -442,7 +659,7 @@
             return true;
         }
 
-        function placeWordAt(grid, word, startRow, startCol, direction) {
+        function placeWordAt(grid, word, startRow, startCol, direction, currentLocations) {
             let locations = [];
             for (let i = 0; i < word.length; i++) {
                 const row = startRow + direction[0] * i;
@@ -454,103 +671,6 @@
                 word: word,
                 locations: locations
             });
-        }
-
-        function displayPuzzle(grid) {
-            const container = document.getElementById('puzzleContainer');
-            const title = document.getElementById('puzzleTitle').value || 'תפזורת';
-            let html = `<h2 class="puzzle-title">${title}</h2><table class="grid">`;
-            
-            for (let row of grid) {
-                html += '<tr>';
-                for (let cell of row) {
-                    html += `<td>${cell}</td>`;
-                }
-                html += '</tr>';
-            }
-            
-            html += '</table>';
-            container.innerHTML = html;
-        }
-
-        function displayWords() {
-            const container = document.getElementById('wordListDisplay');
-            let wordsHtml = currentWords.map(word => `<span class="word-item">${word}</span>`).join('');
-            container.innerHTML = `
-                <h3>המילים המוחבאות:</h3>
-                <div class="words-container">
-                    ${wordsHtml}
-                </div>
-            `;
-        }
-
-        function showSolution() {
-            const cells = document.querySelectorAll('.grid td');
-            const solutionButton = document.getElementById('solutionButton');
-            
-            isSolutionVisible = !isSolutionVisible;
-            
-            if (isSolutionVisible) {
-                wordLocations.forEach(wordInfo => {
-                    wordInfo.locations.forEach(([row, col]) => {
-                        const index = row * parseInt(document.getElementById('size').value) + col;
-                        cells[index].classList.add('highlighted');
-                    });
-                });
-                solutionButton.textContent = 'הסתר פתרון';
-            } else {
-                cells.forEach(cell => cell.classList.remove('highlighted'));
-                solutionButton.textContent = 'הצג פתרון';
-            }
-        }
-
-        function printPuzzle(withWords) {
-            const puzzlesPerPage = parseInt(document.getElementById('puzzlesPerPage').value);
-            const wordList = document.getElementById('wordListDisplay');
-            const title = document.getElementById('puzzleTitle').value || 'תפזורת';
-            const puzzleContent = document.getElementById('puzzleContainer').innerHTML;
-            
-            // יצירת דיב חדש להדפסה
-            const printContainer = document.createElement('div');
-            printContainer.className = 'print-grid';
-            printContainer.setAttribute('data-puzzles', puzzlesPerPage);
-            
-            // הגדרת פקטור קנה מידה בהתאם לכמות התפזורות
-            const scaleFactors = {
-                1: 1, 2: 1.2, 4: 1.4, 6: 1.6, 9: 1.8, 16: 2
-            };
-            printContainer.style.setProperty('--scale-factor', scaleFactors[puzzlesPerPage]);
-            
-            // שכפול התפזורת
-            for (let i = 0; i < puzzlesPerPage; i++) {
-                const puzzleInstance = document.createElement('div');
-                puzzleInstance.className = 'puzzle-instance';
-                puzzleInstance.innerHTML = puzzleContent;
-                if (withWords) {
-                    const wordListClone = wordList.cloneNode(true);
-                    wordListClone.classList.remove('hidden');
-                    puzzleInstance.appendChild(wordListClone);
-                }
-                printContainer.appendChild(puzzleInstance);
-            }
-            
-            // פתיחת חלון הדפסה
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html dir="rtl">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>הדפסת תפזורת</title>
-                    <style>${document.querySelector('style').textContent}</style>
-                </head>
-                <body>
-                    ${printContainer.outerHTML}
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.print();
         }
     </script>
 </body>
