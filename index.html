@@ -173,16 +173,61 @@
             }
             body {
                 background: white;
+                margin: 0;
+                padding: 0;
             }
             .container {
                 box-shadow: none;
                 padding: 0;
+                max-width: none;
             }
             .puzzle-title {
                 margin-top: 0;
             }
             .highlighted {
                 background-color: transparent !important;
+            }
+            .print-grid {
+                display: grid;
+                gap: 20px;
+                padding: 20px;
+                page-break-after: always;
+            }
+            .print-grid[data-puzzles="1"] {
+                grid-template-columns: 1fr;
+            }
+            .print-grid[data-puzzles="2"] {
+                grid-template-columns: 1fr 1fr;
+            }
+            .print-grid[data-puzzles="4"] {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: 1fr 1fr;
+            }
+            .print-grid[data-puzzles="6"] {
+                grid-template-columns: 1fr 1fr 1fr;
+                grid-template-rows: 1fr 1fr;
+            }
+            .print-grid[data-puzzles="9"] {
+                grid-template-columns: 1fr 1fr 1fr;
+                grid-template-rows: 1fr 1fr 1fr;
+            }
+            .print-grid[data-puzzles="16"] {
+                grid-template-columns: 1fr 1fr 1fr 1fr;
+                grid-template-rows: 1fr 1fr 1fr 1fr;
+            }
+            .puzzle-instance {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .puzzle-instance .grid {
+                font-size: calc(24px / var(--scale-factor));
+            }
+            .puzzle-instance .grid td {
+                width: calc(35px / var(--scale-factor));
+                height: calc(35px / var(--scale-factor));
+            }
+            .puzzle-instance .puzzle-title {
+                font-size: calc(1.8em / var(--scale-factor));
             }
         }
 
@@ -211,6 +256,17 @@
                 <div class="input-group">
                     <label for="size">גודל התפזורת:</label>
                     <input type="number" id="size" value="15" min="5" max="30">
+                </div>
+                <div class="input-group">
+                    <label for="puzzlesPerPage">כמות תפזורות בעמוד:</label>
+                    <select id="puzzlesPerPage">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="4">4</option>
+                        <option value="6">6</option>
+                        <option value="9">9</option>
+                        <option value="16">16</option>
+                    </select>
                 </div>
             </div>
             <div class="button-group">
@@ -408,21 +464,52 @@
         }
 
         function printPuzzle(withWords) {
+            const puzzlesPerPage = parseInt(document.getElementById('puzzlesPerPage').value);
             const wordList = document.getElementById('wordListDisplay');
             const title = document.getElementById('puzzleTitle').value || 'תפזורת';
-            const container = document.getElementById('puzzleContainer');
+            const puzzleContent = document.getElementById('puzzleContainer').innerHTML;
             
-            const titleElement = container.querySelector('.puzzle-title');
-            if (titleElement) {
-                titleElement.textContent = title;
+            // יצירת דיב חדש להדפסה
+            const printContainer = document.createElement('div');
+            printContainer.className = 'print-grid';
+            printContainer.setAttribute('data-puzzles', puzzlesPerPage);
+            
+            // הגדרת פקטור קנה מידה בהתאם לכמות התפזורות
+            const scaleFactors = {
+                1: 1, 2: 1.2, 4: 1.4, 6: 1.6, 9: 1.8, 16: 2
+            };
+            printContainer.style.setProperty('--scale-factor', scaleFactors[puzzlesPerPage]);
+            
+            // שכפול התפזורת
+            for (let i = 0; i < puzzlesPerPage; i++) {
+                const puzzleInstance = document.createElement('div');
+                puzzleInstance.className = 'puzzle-instance';
+                puzzleInstance.innerHTML = puzzleContent;
+                if (withWords && i === puzzlesPerPage - 1) {
+                    const wordListClone = wordList.cloneNode(true);
+                    wordListClone.classList.remove('hidden');
+                    puzzleInstance.appendChild(wordListClone);
+                }
+                printContainer.appendChild(puzzleInstance);
             }
             
-            if (withWords) {
-                wordList.classList.remove('hidden');
-            } else {
-                wordList.classList.add('hidden');
-            }
-            window.print();
+            // פתיחת חלון הדפסה
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html dir="rtl">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>הדפסת תפזורת</title>
+                    <style>${document.querySelector('style').textContent}</style>
+                </head>
+                <body>
+                    ${printContainer.outerHTML}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
         }
     </script>
 </body>
