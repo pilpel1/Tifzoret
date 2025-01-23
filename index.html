@@ -93,6 +93,12 @@
             border-radius: var(--border-radius);
             font-size: 16px;
             transition: border-color 0.3s;
+            background-color: white;
+            pointer-events: auto !important;
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
         }
 
         textarea:focus, input:focus {
@@ -342,7 +348,7 @@
         <div class="controls">
             <div class="input-group">
                 <label for="wordList">הכנס מילים (מילה אחת בכל שורה):</label>
-                <textarea id="wordList" dir="rtl" placeholder="הקלד כאן את המילים..."></textarea>
+                <textarea id="wordList" dir="rtl" placeholder="הקלד כאן את המילים..." spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
             </div>
             <div class="input-group">
                 <label for="puzzleTitle">כותרת התפזורת:</label>
