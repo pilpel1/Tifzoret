@@ -320,6 +320,11 @@
                 margin: 1cm;
                 size: A4;
             }
+            .highlighted-print {
+                background-color: #fff9c4 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
         }
 
         .puzzle-title {
@@ -367,8 +372,9 @@
             <div class="button-group">
                 <button onclick="generatePuzzle()">צור תפזורת</button>
                 <button onclick="showSolution()" class="secondary" id="solutionButton">הצג פתרון</button>
-                <button onclick="printPuzzle(true)" class="print">הדפס עם מילים</button>
-                <button onclick="printPuzzle(false)" class="print">הדפס ללא מילים</button>
+                <button onclick="printPuzzle(true, false)" class="print">הדפס עם מילים</button>
+                <button onclick="printPuzzle(false, false)" class="print">הדפס ללא מילים</button>
+                <button onclick="printPuzzle(true, true)" class="print">הדפס עם פתרון</button>
             </div>
         </div>
 
@@ -409,46 +415,46 @@
 
             // יצירת כל הגרסאות
             for (let version = 0; version < versionsCount; version++) {
-                let bestGrid = null;
-                let bestWords = [];
-                let bestFailedWords = [];
-                const MAX_ATTEMPTS = 50;
+            let bestGrid = null;
+            let bestWords = [];
+            let bestFailedWords = [];
+            const MAX_ATTEMPTS = 50;
 
-                for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-                    let grid = Array(size).fill().map(() => Array(size).fill(''));
-                    let currentAttemptWords = [];
-                    let currentAttemptFailed = [];
+            for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+                let grid = Array(size).fill().map(() => Array(size).fill(''));
+                let currentAttemptWords = [];
+                let currentAttemptFailed = [];
                     let currentLocations = [];
 
-                    for (let word of words) {
+                for (let word of words) {
                         if (placeWord(grid, word, currentLocations)) {
-                            currentAttemptWords.push(word);
-                        } else {
-                            currentAttemptFailed.push(word);
-                        }
-                    }
-
-                    if (currentAttemptFailed.length === 0) {
-                        bestGrid = grid;
-                        bestWords = currentAttemptWords;
-                        break;
-                    }
-
-                    if (!bestGrid || currentAttemptFailed.length < bestFailedWords.length) {
-                        bestGrid = grid;
-                        bestWords = currentAttemptWords;
-                        bestFailedWords = currentAttemptFailed;
+                        currentAttemptWords.push(word);
+                    } else {
+                        currentAttemptFailed.push(word);
                     }
                 }
+
+                if (currentAttemptFailed.length === 0) {
+                    bestGrid = grid;
+                    bestWords = currentAttemptWords;
+                    break;
+                }
+
+                if (!bestGrid || currentAttemptFailed.length < bestFailedWords.length) {
+                    bestGrid = grid;
+                    bestWords = currentAttemptWords;
+                    bestFailedWords = currentAttemptFailed;
+                }
+            }
 
                 // מילוי אותיות רנדומליות
-                for (let i = 0; i < size; i++) {
-                    for (let j = 0; j < size; j++) {
-                        if (bestGrid[i][j] === '') {
-                            bestGrid[i][j] = String.fromCharCode(0x05D0 + Math.floor(Math.random() * 27));
-                        }
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    if (bestGrid[i][j] === '') {
+                        bestGrid[i][j] = String.fromCharCode(0x05D0 + Math.floor(Math.random() * 27));
                     }
                 }
+            }
 
                 allPuzzleVersions.push({
                     grid: bestGrid,
@@ -509,12 +515,11 @@
             currentPageIndex = pageIndex;
         }
 
-        function printPuzzle(withWords) {
+        function printPuzzle(withWords, withSolution = false) {
             const puzzlesPerPage = parseInt(document.getElementById('puzzlesPerPage').value);
             const wordList = document.getElementById('wordListDisplay');
             const title = document.getElementById('puzzleTitle').value || 'תפזורת';
             
-            // פתיחת חלון הדפסה
             const printWindow = window.open('', '_blank');
             printWindow.document.write(`
                 <!DOCTYPE html>
@@ -527,7 +532,6 @@
                 <body>
             `);
 
-            // הדפסת כל העמודים
             for (let pageIndex = 0; pageIndex < Math.ceil(allPuzzleVersions.length / puzzlesPerPage); pageIndex++) {
                 const startIdx = pageIndex * puzzlesPerPage;
                 const endIdx = Math.min(startIdx + puzzlesPerPage, allPuzzleVersions.length);
@@ -542,10 +546,19 @@
                             <table class="grid">
                     `;
                     
-                    for (let row of puzzleVersion.grid) {
+                    for (let rowIndex = 0; rowIndex < puzzleVersion.grid.length; rowIndex++) {
                         html += '<tr>';
-                        for (let cell of row) {
-                            html += `<td>${cell}</td>`;
+                        for (let colIndex = 0; colIndex < puzzleVersion.grid[rowIndex].length; colIndex++) {
+                            const cell = puzzleVersion.grid[rowIndex][colIndex];
+                            let isHighlighted = false;
+                            
+                            if (withSolution) {
+                                isHighlighted = puzzleVersion.locations.some(wordInfo => 
+                                    wordInfo.locations.some(([row, col]) => row === rowIndex && col === colIndex)
+                                );
+                            }
+                            
+                            html += `<td${isHighlighted ? ' class="highlighted-print"' : ''}>${cell}</td>`;
                         }
                         html += '</tr>';
                     }
