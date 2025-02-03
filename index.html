@@ -352,8 +352,10 @@
         
         <div class="controls">
             <div class="input-group">
-                <label for="wordList">הכנס מילים (מילה אחת בכל שורה):</label>
-                <textarea id="wordList" dir="rtl" placeholder="הקלד כאן את המילים..." spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+                <label for="wordList">הכנס מילים (ניתן להפריד בין המילים עם רווח או שורה חדשה):</label>
+                <textarea id="wordList" dir="rtl" placeholder="לדוגמה:
+מילה אחת
+או מילים עם רווח ביניהן" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
             </div>
             <div class="input-group">
                 <label for="puzzleTitle">כותרת התפזורת:</label>
@@ -424,7 +426,7 @@
             wordLocations = [];
             allPuzzleVersions = [];
             const words = document.getElementById('wordList').value
-                .split('\n')
+                .split(/[\n\s]+/)  // מפצל לפי רווחים וירידות שורה
                 .map(w => w.trim())
                 .filter(w => w.length > 0)
                 .sort((a, b) => b.length - a.length);
