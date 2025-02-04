@@ -87,6 +87,11 @@
             font-family: 'Noto Rashi Hebrew', serif !important;
         }
 
+        .english {
+            font-family: 'Arial', sans-serif !important;
+            direction: ltr !important;
+        }
+
         label {
             font-weight: 500;
             color: #333;
@@ -384,8 +389,9 @@
                 <div class="input-group">
                     <label for="fontType">סוג גופן:</label>
                     <select id="fontType">
-                        <option value="regular" selected>רגיל</option>
-                        <option value="rashi">רש"י</option>
+                        <option value="regular" selected>עברית - רגיל</option>
+                        <option value="rashi">עברית - רש"י</option>
+                        <option value="english">English</option>
                     </select>
                 </div>
             </div>
@@ -414,10 +420,11 @@
             const fontType = document.getElementById('fontType').value;
             const grids = document.querySelectorAll('.grid');
             grids.forEach(grid => {
+                grid.classList.remove('font-rashi', 'english');
                 if (fontType === 'rashi') {
                     grid.classList.add('font-rashi');
-                } else {
-                    grid.classList.remove('font-rashi');
+                } else if (fontType === 'english') {
+                    grid.classList.add('english');
                 }
             });
         }
@@ -429,6 +436,7 @@
                 .split(/[\n\s]+/)  // מפצל לפי רווחים וירידות שורה
                 .map(w => w.trim())
                 .filter(w => w.length > 0)
+                .map(w => document.getElementById('fontType').value === 'english' ? w.toUpperCase() : w)  // ממיר לאותיות גדולות באנגלית
                 .sort((a, b) => b.length - a.length);
             
             if (words.length === 0) {
@@ -483,7 +491,12 @@
             for (let i = 0; i < size; i++) {
                 for (let j = 0; j < size; j++) {
                     if (bestGrid[i][j] === '') {
-                        bestGrid[i][j] = String.fromCharCode(0x05D0 + Math.floor(Math.random() * 27));
+                        const fontType = document.getElementById('fontType').value;
+                        if (fontType === 'english') {
+                            bestGrid[i][j] = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // A-Z (אותיות גדולות)
+                        } else {
+                            bestGrid[i][j] = String.fromCharCode(0x05D0 + Math.floor(Math.random() * 27)); // א-ת
+                        }
                     }
                 }
             }
