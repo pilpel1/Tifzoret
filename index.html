@@ -349,11 +349,143 @@
             margin: 20px 0;
             font-size: 1.8em;
         }
+
+        .help-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .help-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .help-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1001;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+        }
+
+        .help-content {
+            background: white;
+            padding: 0;
+            border-radius: var(--border-radius);
+            max-width: 800px;
+            width: 90%;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin: 40px auto;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+
+        .help-content-header {
+            position: sticky;
+            top: 0;
+            background: white;
+            padding: 15px 30px;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            border-bottom: 1px solid #eee;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 50px;
+        }
+
+        .help-content-body {
+            padding: 20px 30px;
+        }
+
+        .help-content h2 {
+            color: var(--primary-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: center;
+            justify-content: center;
+            width: 100%;
+            font-size: 1.5em;
+        }
+
+        .help-content h3 {
+            margin-top: 30px;
+            color: var(--primary-color);
+        }
+
+        .help-content ul {
+            padding-right: 20px;
+            margin: 0;
+            padding-bottom: 10px;
+        }
+
+        .help-content li {
+            margin-bottom: 10px;
+        }
+
+        .close-help {
+            position: absolute;
+            top: 12px;
+            left: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+            z-index: 2;
+        }
+
+        .close-help:hover {
+            color: #333;
+        }
+
+        .credit {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .credit a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .credit a:hover {
+            color: #357abd;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>מחולל תפזורות</h1>
+        <h1>✨ מחולל תפזורות ✨</h1>
         
         <div class="controls">
             <div class="input-group">
@@ -376,10 +508,10 @@
                     <select id="puzzlesPerPage">
                         <option value="1" selected>1</option>
                         <option value="2">2</option>
-                        <option value="4">4</option>
-                        <option value="6">6</option>
-                        <option value="9">9</option>
-                        <option value="16">16</option>
+                        <option value="4">4 (מומלץ לתפזורות קטנות)</option>
+                        <option value="6">6 (מומלץ לתפזורות קטנות)</option>
+                        <option value="9">9 (מומלץ לתפזורות קטנות)</option>
+                        <option value="12">12 (מומלץ לתפזורות קטנות מאוד)</option>
                     </select>
                 </div>
                 <div class="input-group">
@@ -406,6 +538,40 @@
 
         <div id="puzzleContainer"></div>
         <div id="wordListDisplay" class="word-list"></div>
+    </div>
+
+    <button class="help-button" onclick="showHelp()">❔</button>
+    
+    <div class="help-modal" id="helpModal" onclick="hideHelp(event)">
+        <div class="help-content">
+            <div class="help-content-header">
+                <button class="close-help" onclick="hideHelp(event)">×</button>
+                <h2>🎮 איך משתמשים במחולל התפזורות? 🎯</h2>
+            </div>
+            <div class="help-content-body">
+                <ul>
+                    <li>📝 <strong>הכנסת מילים:</strong> הקלד את המילים שברצונך להחביא בתפזורת. ניתן להפריד בין המילים עם רווח או שורה חדשה.</li>
+                    <li>🔤 <strong>בחירת גופן:</strong> בחר בין עברית רגילה, כתב רש"י או אנגלית. שים לב - בבחירת אנגלית, כל האותיות יומרו לאותיות גדולות.</li>
+                    <li>📏 <strong>גודל התפזורת:</strong> קבע את מספר המשבצות בכל שורה ועמודה (מינימום 5, מקסימום 30).</li>
+                    <li>🔄 <strong>מספר גרסאות:</strong> ניתן ליצור מספר גרסאות שונות של אותה תפזורת.</li>
+                    <li>📑 <strong>תצוגה בעמוד:</strong> בחר כמה תפזורות יוצגו בכל עמוד. שים לב - ככל שמספר התפזורות בעמוד גדול יותר, כדאי שהתפזורות יהיו קטנות יותר!</li>
+                    <li>🖨️ <strong>הדפסה:</strong> ניתן להדפיס את התפזורת עם או בלי המילים המוחבאות, או עם הפתרון המלא.</li>
+                </ul>
+
+                <h3>✨ טיפים למורים והורים</h3>
+                <ul>
+                    <li>🎯 <strong>אתגר חיפוש:</strong> ניתן לתת לתלמידים תפזורת בלי רשימת המילים המוחבאות - זה מאתגר אותם לחפש מילים רלוונטיות לנושא הנלמד.</li>
+                    <li>🤝 <strong>למידה שיתופית:</strong> כשכל תלמיד מקבל גרסה שונה של אותה תפזורת, הם יכולים לעזור אחד לשני בחיפוש המילים מבלי שיוכלו להעתיק.</li>
+                    <li>📚 <strong>לימוד שפה:</strong> השימוש בתפזורות באנגלית או בכתב רש"י יכול לעזור בשיפור הקריאה והזיהוי של אותיות בשפות ובכתבים שונים.</li>
+                    <li>🎨 <strong>התאמה לגיל:</strong> התאימו את גודל התפזורת וכמות המילים לרמת התלמידים - תפזורת קטנה יותר מתאימה לצעירים, וגדולה יותר למתקדמים.</li>
+                    <li>🌟 <strong>העשרה:</strong> אפשר להשתמש בתפזורת כפעילות העשרה או כמשימת בית כיפית שמחברת בין למידה למשחק.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="credit">
+        פותח על ידי <a href="https://github.com/pilpel1" target="_blank">pilpel1</a> 🚀
     </div>
 
     <script>
@@ -733,6 +899,16 @@
                 word: word,
                 locations: locations
             });
+        }
+
+        function showHelp() {
+            document.getElementById('helpModal').style.display = 'flex';
+        }
+
+        function hideHelp(event) {
+            if (event.target.id === 'helpModal' || event.target.className === 'close-help') {
+                document.getElementById('helpModal').style.display = 'none';
+            }
         }
 
         // הוספת מאזין אירועים לשינוי סוג הגופן
