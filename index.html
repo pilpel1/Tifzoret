@@ -44,7 +44,7 @@
         .grid {
             font-family: var(--grid-font-family);
             font-size: 24px;
-            font-weight: 600;
+            font-weight: normal;
             border-collapse: separate;
             border-spacing: 2px;
             margin: 20px auto;
@@ -418,8 +418,8 @@
             }
             .puzzle-title {
                 margin-top: 0;
-                margin-bottom: 10px;
-                font-size: 16px;
+                margin-bottom: 5px;
+                font-size: 14px;
             }
             .highlighted {
                 background-color: transparent !important;
@@ -427,77 +427,99 @@
             .print-grid {
                 display: grid;
                 gap: 20px;
-                padding: 20px;
+                padding: 10px;
                 page-break-inside: avoid;
                 page-break-after: always;
-                width: fit-content;
+                width: 100%;
                 margin: 0 auto;
+                justify-content: center;
+                align-items: center;
+                min-height: calc(100vh - 20px);
             }
             .print-grid[data-puzzles="1"] {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(auto, 95%);
             }
             .print-grid[data-puzzles="2"] {
-                grid-template-columns: repeat(2, fit-content(45%));
+                grid-template-columns: minmax(auto, 95%);
+                grid-template-rows: repeat(2, auto);
+                gap: 30px;
             }
             .print-grid[data-puzzles="4"] {
-                grid-template-columns: repeat(2, fit-content(45%));
+                grid-template-columns: repeat(2, minmax(auto, 47%));
                 grid-template-rows: repeat(2, auto);
+                gap: 25px;
             }
             .print-grid[data-puzzles="6"] {
-                grid-template-columns: repeat(3, fit-content(30%));
-                grid-template-rows: repeat(2, auto);
+                grid-template-columns: repeat(2, minmax(auto, 47%));
+                grid-template-rows: repeat(3, auto);
+                gap: 25px;
             }
             .print-grid[data-puzzles="9"] {
-                grid-template-columns: repeat(3, fit-content(30%));
+                grid-template-columns: repeat(3, minmax(auto, 31%));
                 grid-template-rows: repeat(3, auto);
+                gap: 20px;
             }
-            .print-grid[data-puzzles="16"] {
-                grid-template-columns: repeat(4, fit-content(22%));
+            .print-grid[data-puzzles="12"] {
+                grid-template-columns: repeat(3, minmax(auto, 31%));
                 grid-template-rows: repeat(4, auto);
+                gap: 15px;
             }
             .puzzle-instance {
                 break-inside: avoid;
                 page-break-inside: avoid;
                 width: fit-content;
                 margin: 0 auto;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
             }
             .puzzle-instance .grid {
-                font-size: 16px;
+                font-size: 14px;
                 margin: 0 auto;
-                width: fit-content;
+                width: auto;
                 border-spacing: 1px;
                 border-collapse: separate;
+                table-layout: fixed;
             }
             .puzzle-instance .grid td {
-                width: 28px;
-                height: 28px;
-                padding: 2px;
+                padding: 1px;
                 border: 1px solid #ddd;
                 text-align: center;
+                aspect-ratio: 1;
             }
             .puzzle-instance .word-list {
-                margin-top: 5px;
-                font-size: 12px;
+                margin-top: 3px;
+                font-size: 10px;
                 width: 100%;
                 max-width: 100%;
-                padding: 5px;
+                padding: 3px;
             }
             .puzzle-instance .word-list h3 {
-                font-size: 14px;
+                font-size: 12px;
                 margin: 2px 0;
             }
             .puzzle-instance .word-item {
-                font-size: 12px;
-                padding: 2px 8px;
+                font-size: 10px;
+                padding: 1px 6px;
             }
             @page {
-                margin: 1cm;
+                margin: 0.3cm;
                 size: A4;
             }
             .highlighted-print {
                 background-color: #fff9c4 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+            }
+            .puzzle-instance .grid td {
+                width: 50px !important; /* הערה: הערך של cellSize צריך להיות מוגדר מחוץ לקובץ הסגנון */
+                height: 50px !important; /* הערה: הערך של cellSize צריך להיות מוגדר מחוץ לקובץ הסגנון */
+                font-size: 35px !important; /* הערה: הערך של cellSize צריך להיות מוגדר מחוץ לקובץ הסגנון */
+                line-height: 50px !important; /* הערה: הערך של cellSize צריך להיות מוגדר מחוץ לקובץ הסגנון */
+                padding: 0 !important;
+                vertical-align: middle !important;
+                text-align: center !important;
+                font-weight: normal !important;
             }
         }
 
@@ -856,6 +878,25 @@
             const puzzlesPerPage = parseInt(document.getElementById('puzzlesPerPage').value);
             const container = document.getElementById('puzzleContainer');
             const title = document.getElementById('puzzleTitle').value || 'תפזורת';
+            const size = parseInt(document.getElementById('size').value);
+            
+            // חישוב גודל התא והפונט
+            const pageWidth = 794;    // רוחב דף A4 בפיקסלים
+            const pageHeight = 1123;   // גובה דף A4 בפיקסלים
+            const margins = 20;        // שוליים בפיקסלים
+            const availableWidth = pageWidth - (margins * 2);
+            const availableHeight = pageHeight - (margins * 2);
+            const titleHeight = 60;
+            const effectiveHeight = availableHeight - titleHeight;
+            
+            // חישוב גודל התא
+            const cellSize = Math.floor(Math.min(
+                availableWidth * 0.8 / size,
+                effectiveHeight * 0.8 / size
+            ));
+            
+            // חישוב גודל הפונט - 80% מגודל התא
+            const fontSize = Math.max(12, Math.min(60, Math.floor(cellSize * 0.8)));
             
             let html = `
                 <div class="pagination">
@@ -874,13 +915,13 @@
                 html += `
                     <div class="puzzle-instance">
                         <h2 class="puzzle-title">${title} - גרסה ${i + 1}</h2>
-                        <table class="grid${puzzleVersion.fontType === 'rashi' ? ' font-rashi' : ''}">
+                        <table class="grid${puzzleVersion.fontType === 'rashi' ? ' font-rashi' : ''}" style="font-size: ${fontSize}px;">
                 `;
                 
                 for (let row of puzzleVersion.grid) {
                     html += '<tr>';
                     for (let cell of row) {
-                        html += `<td>${cell}</td>`;
+                        html += `<td style="width: ${cellSize}px; height: ${cellSize}px; line-height: ${cellSize}px; font-size: inherit;">${cell}</td>`;
                     }
                     html += '</tr>';
                 }
@@ -899,6 +940,79 @@
             const wordList = document.getElementById('wordListDisplay');
             const title = document.getElementById('puzzleTitle').value || 'תפזורת';
             const fontType = document.getElementById('fontType').value;
+            const size = parseInt(document.getElementById('size').value);
+            
+            // חישוב מספר התפזורות המקסימלי לעמוד בהתאם לגודל
+            let adjustedPuzzlesPerPage = puzzlesPerPage;
+            if (size >= 20) {
+                adjustedPuzzlesPerPage = 1;
+            } else if (size >= 15) {
+                adjustedPuzzlesPerPage = Math.min(2, puzzlesPerPage);
+            } else if (size >= 12) {
+                adjustedPuzzlesPerPage = Math.min(4, puzzlesPerPage);
+            } else if (size >= 10) {
+                adjustedPuzzlesPerPage = Math.min(6, puzzlesPerPage);
+            } else if (size >= 8) {
+                adjustedPuzzlesPerPage = Math.min(9, puzzlesPerPage);
+            }
+            
+            // חישוב גודל תא דינמי בהתאם לגודל הדף וכמות התפזורות
+            // המרה ל-px: A4 בהדפסה הוא בערך 794px על 1123px (96 DPI)
+            const pageWidth = 794;    // רוחב דף A4 בפיקסלים
+            const pageHeight = 1123;   // גובה דף A4 בפיקסלים
+            const margins = 20;        // שוליים בפיקסלים
+            
+            // חישוב השטח הזמין לאחר הורדת שוליים
+            const availableWidth = pageWidth - (margins * 2);
+            const availableHeight = pageHeight - (margins * 2);
+            
+            // חישוב גודל התא בהתאם למספר התפזורות בעמוד
+            let cellSize;
+            if (adjustedPuzzlesPerPage === 1) {
+                // במקרה של תפזורת בודדת, אנחנו רוצים שהיא תהיה כמה שיותר גדולה
+                const titleHeight = 60;                         // גובה כותרת בפיקסלים
+                const wordListHeight = withWords ? 80 : 0;      // גובה רשימת מילים בפיקסלים
+                const effectiveHeight = availableHeight - titleHeight - wordListHeight;  // גובה נטו לתפזורת
+                
+                // מחשב את הגודל המקסימלי האפשרי לתא בודד
+                // לוקחים 80% מהשטח הזמין ומחלקים במספר התאים (size)
+                // הערה: ככל שהאחוז גדול יותר, התפזורת תופסת יותר מקום בדף
+                cellSize = Math.floor(Math.min(
+                    availableWidth * 0.8 / size,     // 80% מרוחב הדף
+                    effectiveHeight * 0.8 / size      // 80% מהגובה האפקטיבי
+                ));
+
+                // חישוב גודל פונט דינמי - 80% מגודל התא
+                // מינימום 12px, מקסימום 60px
+                const fontSize = Math.max(12, Math.min(60, Math.floor(cellSize * 0.8)));
+                
+                // מעדכן את הסטיילינג הגלובליים
+                const styleElement = document.createElement('style');
+                styleElement.textContent = `
+                    @media print {
+                        .puzzle-instance .grid td {
+                            width: ${cellSize}px !important;
+                            height: ${cellSize}px !important;
+                            font-size: ${fontSize}px !important;
+                            line-height: ${cellSize}px !important;
+                            padding: 0 !important;
+                            vertical-align: middle !important;
+                            text-align: center !important;
+                        }
+                    }
+                `;
+                document.head.appendChild(styleElement);
+            } else if (adjustedPuzzlesPerPage === 2) {
+                cellSize = Math.floor(Math.min(availableWidth * 0.95, (availableHeight * 0.45)) / size);
+            } else if (adjustedPuzzlesPerPage <= 4) {
+                cellSize = Math.floor(Math.min((availableWidth * 0.47), (availableHeight * 0.45)) / size);
+            } else if (adjustedPuzzlesPerPage <= 6) {
+                cellSize = Math.floor(Math.min((availableWidth * 0.47), (availableHeight * 0.3)) / size);
+            } else if (adjustedPuzzlesPerPage <= 9) {
+                cellSize = Math.floor(Math.min((availableWidth * 0.31), (availableHeight * 0.3)) / size);
+            } else {
+                cellSize = Math.floor(Math.min((availableWidth * 0.31), (availableHeight * 0.23)) / size);
+            }
             
             const printWindow = window.open('', '_blank');
             printWindow.document.write(`
@@ -908,22 +1022,59 @@
                     <meta charset="UTF-8">
                     <title>הדפסת תפזורת</title>
                     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600&family=Varela+Round&family=Noto+Rashi+Hebrew:wght@400;600&display=swap" rel="stylesheet">
-                    <style>${document.querySelector('style').textContent}</style>
+                    <style>
+                        ${document.querySelector('style').textContent}
+                        @media print {
+                            .puzzle-instance .grid td {
+                                width: ${cellSize}px !important;
+                                height: ${cellSize}px !important;
+                                font-size: ${Math.max(12, Math.min(60, Math.floor(cellSize * 0.7)))}px !important;
+                                line-height: ${cellSize}px !important;
+                                padding: 0 !important;
+                                vertical-align: middle !important;
+                                text-align: center !important;
+                                font-weight: normal !important;
+                            }
+                            .puzzle-instance .grid {
+                                width: ${cellSize * size}px !important;
+                                height: ${cellSize * size}px !important;
+                                border-collapse: separate !important;
+                                border-spacing: 1px !important;
+                            }
+                            .puzzle-instance {
+                                margin-bottom: ${adjustedPuzzlesPerPage <= 2 ? '20px' : '10px'} !important;
+                                page-break-inside: avoid !important;
+                            }
+                        }
+                    </style>
                 </head>
                 <body>
             `);
 
-            for (let pageIndex = 0; pageIndex < Math.ceil(allPuzzleVersions.length / puzzlesPerPage); pageIndex++) {
-                const startIdx = pageIndex * puzzlesPerPage;
-                const endIdx = Math.min(startIdx + puzzlesPerPage, allPuzzleVersions.length);
+            for (let pageIndex = 0; pageIndex < Math.ceil(allPuzzleVersions.length / adjustedPuzzlesPerPage); pageIndex++) {
+                let html = `<div class="print-grid" data-puzzles="${adjustedPuzzlesPerPage}">`;
                 
-                let html = `<div class="print-grid" data-puzzles="${puzzlesPerPage}">`;
+                // חישוב כמה פעמים צריך לשכפל כל גרסה
+                const totalPuzzlesNeeded = adjustedPuzzlesPerPage;
+                const availableVersions = allPuzzleVersions.length;
+                const repetitionsPerVersion = Math.ceil(totalPuzzlesNeeded / availableVersions);
                 
-                for (let i = startIdx; i < endIdx; i++) {
-                    const puzzleVersion = allPuzzleVersions[i];
+                // יצירת מערך של כל הגרסאות כולל שכפולים
+                let expandedVersions = [];
+                for (let i = 0; i < availableVersions; i++) {
+                    for (let j = 0; j < repetitionsPerVersion && expandedVersions.length < totalPuzzlesNeeded; j++) {
+                        expandedVersions.push(allPuzzleVersions[i]);
+                    }
+                }
+                
+                // הצגת כל הגרסאות (כולל השכפולים)
+                for (let i = 0; i < puzzlesPerPage; i++) {
+                    const puzzleVersion = expandedVersions[i];
+                    if (!puzzleVersion) break;
+                    
                     html += `
                         <div class="puzzle-instance">
-                            <h2 class="puzzle-title">${title} - גרסה ${i + 1}</h2>
+                            <h2 class="puzzle-title">${title} - גרסה ${(i % availableVersions) + 1}</h2>
                             <table class="grid${fontType === 'rashi' ? ' font-rashi' : ''}">
                     `;
                     
