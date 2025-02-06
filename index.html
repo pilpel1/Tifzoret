@@ -975,37 +975,35 @@
                 ));
             } else if (adjustedPuzzlesPerPage === 2) {
                 // במקרה של 2 תפזורות בעמוד
-                const titleHeight = 25;                         // הקטנת גובה כותרת עוד יותר
-                const wordListHeight = withWords ? 35 : 0;      // הקטנת גובה רשימת מילים
-                const spaceBetweenPuzzles = 5;                // הקטנת הרווח בין התפזורות
-                const totalVerticalSpace = titleHeight * 2 + wordListHeight * 2 + spaceBetweenPuzzles;
-                const effectiveHeight = (availableHeight - totalVerticalSpace) / 2;  // גובה נטו לכל תפזורת
+                const titleHeight = 25;
+                const wordListHeight = withWords ? 35 : 0;
+                const spaceBetweenPuzzles = 10;
                 
-                // מחשב את הגודל המקסימלי האפשרי לתא כשיש 2 תפזורות
-                // מקטין את האחוזים כשהתפזורת גדולה יותר
-                const scaleFactor = size >= 12 ? 0.65 : 0.75;  // מקטין את הגודל לתפזורות גדולות
+                // חישוב השטח האפקטיבי לכל תפזורת
+                const totalVerticalSpace = (titleHeight + wordListHeight) * 2 + spaceBetweenPuzzles;
+                const effectiveHeight = (availableHeight - totalVerticalSpace) / 2;
+                
+                const scaleFactor = size >= 12 ? 0.65 : 0.75;
                 
                 cellSize = Math.floor(Math.min(
-                    availableWidth * scaleFactor / size,     // התאמה דינמית לרוחב
-                    effectiveHeight * 0.85 / size      // 85% מהגובה האפקטיבי לכל תפזורת
+                    availableWidth * scaleFactor / size,
+                    effectiveHeight * scaleFactor / size
                 ));
 
-                // הגבלת גודל מקסימלי לתאים בתפזורות גדולות
                 if (size >= 12) {
-                    cellSize = Math.min(cellSize, 30);  // מגביל את גודל התא המקסימלי
+                    cellSize = Math.min(cellSize, 30);
                 }
             } else if (adjustedPuzzlesPerPage === 4) {
                 // במקרה של 4 תפזורות בעמוד (2x2 grid)
-                const titleHeight = 20;                         // כותרת קטנה יותר
-                const wordListHeight = withWords ? 40 : 0;      // רשימת מילים גדולה יותר
-                const spaceBetweenPuzzles = 10;                // רווח בין תפזורות
+                const titleHeight = 20;
+                const wordListHeight = withWords ? 30 : 0;
+                const spaceBetweenPuzzles = 10;
                 
                 // חישוב השטח האפקטיבי לכל תפזורת
-                const totalVerticalSpace = titleHeight + wordListHeight + spaceBetweenPuzzles;
-                const effectiveHeight = (availableHeight - totalVerticalSpace) / 2;  // חלוקה ל-2 שורות
-                const effectiveWidth = (availableWidth - spaceBetweenPuzzles) / 2;   // חלוקה ל-2 עמודות
+                const totalVerticalSpace = (titleHeight + wordListHeight) * 2 + spaceBetweenPuzzles;
+                const effectiveHeight = (availableHeight - totalVerticalSpace) / 2;
+                const effectiveWidth = (availableWidth - spaceBetweenPuzzles) / 2;
                 
-                // חישוב גודל התא המקסימלי האפשרי - משתמשים ב-85% מהשטח הזמין
                 const scaleFactor = 0.85;
                 
                 cellSize = Math.floor(Math.min(
@@ -1013,9 +1011,11 @@
                     effectiveHeight * scaleFactor / size
                 ));
 
-                // הגבלת גודל מקסימלי לתאים - מאפשרים גודל גדול יותר
                 cellSize = Math.min(cellSize, 35);
             }
+            
+            // חישוב מספר העמודים הדרוש
+            const totalPages = Math.ceil(allPuzzleVersions.length / adjustedPuzzlesPerPage);
             
             const printWindow = window.open('', '_blank');
             printWindow.document.write(`
@@ -1047,7 +1047,36 @@
                                 flex-direction: column !important;
                                 align-items: center !important;
                                 margin: 5px !important;
+                                ` : adjustedPuzzlesPerPage === 2 ? `
+                                width: 100% !important;
+                                display: flex !important;
+                                flex-direction: column !important;
+                                align-items: center !important;
+                                margin-bottom: ${withWords ? '20px' : '0'} !important;
                                 ` : ''}
+                            }
+                            .print-grid[data-puzzles="2"], .print-grid[data-puzzles="4"] {
+                                display: flex !important;
+                                flex-wrap: wrap !important;
+                                justify-content: space-between !important;
+                                align-items: flex-start !important;
+                                gap: 10px !important;
+                                padding: 10px !important;
+                                max-width: 100% !important;
+                                margin: 0 auto !important;
+                                page-break-inside: avoid !important;
+                                min-height: ${adjustedPuzzlesPerPage === 2 ? '100vh' : 'auto'} !important;
+                            }
+                            .word-list {
+                                margin-top: ${adjustedPuzzlesPerPage === 1 ? '20px' : '10px'} !important;
+                                font-size: ${
+                                    adjustedPuzzlesPerPage === 1 ? '14px' : 
+                                    adjustedPuzzlesPerPage === 2 ? (size >= 12 ? '9px' : '11px') :
+                                    '10px'} !important;
+                                padding: ${adjustedPuzzlesPerPage === 1 ? '15px' : '8px'} !important;
+                                width: ${adjustedPuzzlesPerPage > 1 ? '95%' : '100%'} !important;
+                                box-sizing: border-box !important;
+                                margin-bottom: 0 !important;
                             }
                             .puzzle-title {
                                 font-size: ${
@@ -1058,39 +1087,13 @@
                                 text-align: center !important;
                                 width: 100% !important;
                             }
-                            .word-list {
-                                margin-top: ${adjustedPuzzlesPerPage === 1 ? '20px' : '10px'} !important;
-                                font-size: ${
-                                    adjustedPuzzlesPerPage === 1 ? '14px' : 
-                                    adjustedPuzzlesPerPage === 2 ? (size >= 12 ? '9px' : '11px') :
-                                    '10px'} !important;
-                                padding: ${adjustedPuzzlesPerPage === 1 ? '15px' : '8px'} !important;
-                                width: 100% !important;
-                                box-sizing: border-box !important;
+                            @page {
+                                margin: 0;
+                                size: A4;
                             }
-                            .word-item {
-                                font-size: ${
-                                    adjustedPuzzlesPerPage === 1 ? '13px' : 
-                                    adjustedPuzzlesPerPage === 2 ? (size >= 12 ? '8px' : '10px') :
-                                    '9px'} !important;
-                                padding: ${adjustedPuzzlesPerPage === 1 ? '3px 8px' : '2px 6px'} !important;
-                                margin: 2px !important;
-                            }
-                            .print-grid[data-puzzles="4"] {
-                                display: flex !important;
-                                flex-wrap: wrap !important;
-                                justify-content: space-between !important;
-                                align-items: flex-start !important;
-                                gap: 10px !important;
-                                padding: 10px !important;
-                                max-width: 100% !important;
-                                margin: 0 auto !important;
-                            }
-                            .grid {
-                                ${adjustedPuzzlesPerPage === 4 ? `
-                                margin: 0 auto !important;
-                                border-spacing: 1px !important;
-                                ` : ''}
+                            body {
+                                margin: 0;
+                                padding: ${margins}px;
                             }
                         }
                     </style>
@@ -1098,30 +1101,21 @@
                 <body>
             `);
 
-            for (let pageIndex = 0; pageIndex < Math.ceil(allPuzzleVersions.length / adjustedPuzzlesPerPage); pageIndex++) {
+            // מעבר על כל העמודים
+            for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
                 let html = `<div class="print-grid" data-puzzles="${adjustedPuzzlesPerPage}">`;
                 
-                // חישוב כמה פעמים צריך לשכפל כל גרסה
-                const totalPuzzlesNeeded = adjustedPuzzlesPerPage;
-                const availableVersions = allPuzzleVersions.length;
-                const repetitionsPerVersion = Math.ceil(totalPuzzlesNeeded / availableVersions);
+                // חישוב כמה פעמים צריך להציג כל גרסה בעמוד
+                const copiesPerPage = adjustedPuzzlesPerPage;
                 
-                // יצירת מערך של כל הגרסאות כולל שכפולים
-                let expandedVersions = [];
-                for (let i = 0; i < availableVersions; i++) {
-                    for (let j = 0; j < repetitionsPerVersion && expandedVersions.length < totalPuzzlesNeeded; j++) {
-                        expandedVersions.push(allPuzzleVersions[i]);
-                    }
-                }
-                
-                // הצגת כל הגרסאות (כולל השכפולים)
-                for (let i = 0; i < puzzlesPerPage; i++) {
-                    const puzzleVersion = expandedVersions[i];
-                    if (!puzzleVersion) break;
+                // הצגת הגרסאות בעמוד הנוכחי
+                for (let i = 0; i < copiesPerPage; i++) {
+                    const puzzleVersion = allPuzzleVersions[0];  // תמיד משתמשים בגרסה הראשונה אם יש רק אחת
+                    if (!puzzleVersion) continue;
                     
                     html += `
                         <div class="puzzle-instance">
-                            <h2 class="puzzle-title">${title} - גרסה ${(i % availableVersions) + 1}</h2>
+                            <h2 class="puzzle-title">${title}</h2>
                             <table class="grid${fontType === 'rashi' ? ' font-rashi' : ''}">
                     `;
                     
@@ -1154,6 +1148,12 @@
                 }
                 
                 html += '</div>';
+                
+                // הוספת page break רק אם זה לא העמוד האחרון
+                if (pageIndex < totalPages - 1) {
+                    html += '<div style="page-break-after: always;"></div>';
+                }
+                
                 printWindow.document.write(html);
             }
             
